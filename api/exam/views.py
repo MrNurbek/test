@@ -8,3 +8,4 @@ class CreateExamView(CreateAPIView):
     queryset = Exam.objects.all()
     serializer_class = ExamSerializer
     permission_classes = [IsAdminUser]
+

@@ -30,7 +30,6 @@ class LoginView(TokenObtainPairView):
 
 
 
-
 class UserProfileView(APIView):
     def get(self, request, exam_id):
         user_exam = get_object_or_404(
@@ -41,9 +40,44 @@ class UserProfileView(APIView):
             user=request.user,
             exam_id=exam_id
         )
-        attempts_data = [get_attempt_details(attempt) for attempt in user_exam.attempts.all()]
+
+        attempts_data = [self.get_attempt_details(attempt) for attempt in user_exam.attempts.all()]
 
         return Response({
             "exam": user_exam.exam.category.name,
             "attempts": attempts_data
-        })
+        }, status=200)
+
+    def get_attempt_details(self, attempt):
+        assigned_tests = attempt.tests.all()
+        user_answers = {
+            answer.test_id: answer for answer in attempt.answers.all()
+        }
+
+        answers_data = []
+        correct_count = 0
+
+        for test in assigned_tests:
+            user_answer = user_answers.get(test.id)
+            selected_answer_text = user_answer.selected_answer if user_answer else None
+            correct_answer_text = next((answer.text for answer in test.answers.all() if answer.is_correct), None)
+            is_correct = user_answer.is_correct if user_answer else False
+
+            if is_correct:
+                correct_count += 1
+
+            answers_data.append({
+                "question": test.question,
+                "selected_answer": selected_answer_text,
+                "correct_answer": correct_answer_text,
+                "is_correct": is_correct
+            })
+
+        return {
+            "attempt_number": attempt.attempt_number,
+            "score": correct_count,
+            "total_questions": assigned_tests.count(),
+            "correct_answers": correct_count,
+            "wrong_answers": assigned_tests.count() - correct_count,
+            "answers": answers_data
+        }

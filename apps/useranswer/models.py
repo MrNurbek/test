@@ -2,7 +2,7 @@ from django.db import models
 
 from apps.examattempt.models import ExamAttempt
 from apps.testbase.models import Test
-from apps.userexam.models import UserExam
+
 
 
 class UserAnswer(models.Model):

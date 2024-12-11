@@ -1,6 +1,24 @@
 from django.db.models import Count
 import random
 
+from apps.testbase.models import Test
+
+
+def _get_random_tests(self, exam):
+    all_tests = []
+    topics = exam.topics.all()
+    for topic in topics:
+        topic_tests = list(Test.objects.filter(topic=topic))
+        if not topic_tests:
+            continue  # Agar topic uchun savollar yo'q bo'lsa, o'tib ketamiz
+
+        num_questions = min(len(topic_tests), exam.total_questions // len(topics))  # Mavjud savollar soniga moslash
+        random_tests = random.sample(topic_tests, num_questions)
+        all_tests.extend(random_tests)
+
+    random.shuffle(all_tests)
+    return all_tests
+
 
 def get_random_tests(exam):
     all_tests = [

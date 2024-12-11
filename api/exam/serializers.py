@@ -11,12 +11,13 @@ class ExamSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Exam
-        fields = ['id', 'category', 'topics', 'start_time', 'end_time', 'total_questions']
+        fields = ['id', 'category', 'topics', 'start_time', 'end_time', 'total_questions', 'time_limit']
 
     def create(self, validated_data):
         topics = validated_data.pop('topics')
         exam = Exam.objects.create(**validated_data)
         exam.topics.set(topics)
         return exam
+
 
 
