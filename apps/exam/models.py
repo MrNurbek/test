@@ -1,5 +1,4 @@
 from django.db import models
-import random
 from apps.category.models import Category
 from apps.testbase.models import  Topic
 

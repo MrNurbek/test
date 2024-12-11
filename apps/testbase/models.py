@@ -1,6 +1,5 @@
 from django.db import models
 from apps.category.models import Category
-import random
 
 
 
