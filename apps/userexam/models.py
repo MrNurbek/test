@@ -3,12 +3,11 @@ from django.db import models
 from apps.testbase.models import Test
 from apps.userapp.models import User
 from apps.exam.models import Exam
-from django.utils.timezone import now
 
 class UserExam(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_exams')
-    exam = models.ForeignKey(Exam, on_delete=models.CASCADE, related_name='user_exams')  # To'liq yo'lni ko'rsatish kerak
-    tests = models.ManyToManyField(Test, related_name='user_exams')  # To'liq yo'lni ko'rsatish kerak
+    exam = models.ForeignKey(Exam, on_delete=models.CASCADE, related_name='user_exams')
+    tests = models.ManyToManyField(Test, related_name='user_exams')
     attempt_count = models.IntegerField(default=0)
     started_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(

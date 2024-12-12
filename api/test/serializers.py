@@ -1,22 +1,27 @@
 from rest_framework import serializers
-
+import random
 from apps.examattempt.models import ExamAttempt
 from apps.testbase.models import Test, Answer
-
-
-class TestSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Test
-        fields = ['id', 'category', 'topic', 'question', 'answers']
-
-
-
 
 
 class AnswerDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Answer
-        fields = ['text', 'is_correct']
+        fields = ['id', 'text', 'is_correct']
+
+
+class TestSerializer(serializers.ModelSerializer):
+    answers = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Test
+        fields = ['id', 'question', 'answers']
+
+    def get_answers(self, test):
+        answers = list(test.answers.all())
+        random.shuffle(answers)
+        return AnswerDetailsSerializer(answers, many=True).data
+
 
 class AttemptDetailsSerializer(serializers.ModelSerializer):
     answers = serializers.SerializerMethodField()
