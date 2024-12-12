@@ -1,5 +1,4 @@
 from django.db import models
-
 from apps.testbase.models import Test
 from apps.userexam.models import UserExam
 
@@ -14,4 +13,4 @@ class ExamAttempt(models.Model):
     score = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
-        return f"Attempt {self.attempt_number} for {self.user_exam.exam.category.name}- {self.completed_at} -{self.id}"
+        return f"Attempt {self.attempt_number} for {self.user_exam.exam.category.name}-{self.started_at} - {self.completed_at} -{self.id}"

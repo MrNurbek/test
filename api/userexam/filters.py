@@ -1,7 +1,37 @@
 from django.db.models import Count
+from apps.testbase.models import Test
+from django.db.models import Max
 import random
 
-from apps.testbase.models import Test
+
+def get_random_tests_with_answers(exam):
+    """Optimized random test and answer selection."""
+    all_tests = []
+    topics = exam.topics.all()
+
+    for topic in topics:
+        # Maksimal ID-ni olish (ID bo'yicha random tanlash uchun)
+        max_id = Test.objects.filter(topic=topic).aggregate(max_id=Max('id'))['max_id']
+        if not max_id:
+            continue  # Mavzu uchun testlar mavjud bo'lmasa, keyingi mavzuga o'tamiz
+
+        topic_tests = []
+        while len(topic_tests) < exam.total_questions // len(topics):
+            random_id = random.randint(1, max_id)  # Tasodifiy ID tanlash
+            random_test = Test.objects.filter(topic=topic, id=random_id).first()
+            if random_test and random_test not in topic_tests:
+                topic_tests.append(random_test)
+
+        for test in topic_tests:
+            randomized_answers = list(test.answers.all())
+            random.shuffle(randomized_answers)  # Javoblarni randomlashtirish
+            all_tests.append({
+                "test": test,
+                "randomized_answers": randomized_answers
+            })
+
+    random.shuffle(all_tests)  # Testlarni ham randomlashtirish
+    return all_tests
 
 
 def _get_random_tests(self, exam):
@@ -31,8 +61,6 @@ def get_random_tests(exam):
     ]
     random.shuffle(all_tests)
     return all_tests
-
-
 
 
 def get_exam_result(exam_attempt):

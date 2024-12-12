@@ -15,11 +15,6 @@ class Test(models.Model):
     question = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def get_randomized_answers(self):
-        answers = list(self.answers.all())
-        random.shuffle(answers)
-        return answers
-
 
     def __str__(self):
         return f"id={self.id} - {self.category.name} - {self.topic.name}"
@@ -31,7 +26,7 @@ class Answer(models.Model):
     is_correct = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.test.question[:30]} - {'Correct' if self.is_correct else 'Incorrect'} -{self.id}"
+        return f"{self.test.question[:30]} -{self.test.id} {'Correct' if self.is_correct else 'Incorrect'} -{self.id}"
 
 
 

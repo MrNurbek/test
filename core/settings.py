@@ -12,7 +12,7 @@ SECRET_KEY = 'django-insecure-9)n@cww3kqa1o+4w99d46mbc@1rbcfj8$n^^c183aob^4rw3t^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -41,6 +41,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'api.middleware.auto_complete_exams.AutoCompleteExamsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -121,10 +122,7 @@ LANGUAGE_CODE = 'en-us'
 USE_TZ = False
 TIME_ZONE = 'Asia/Tashkent'
 
-
-
 USE_I18N = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
