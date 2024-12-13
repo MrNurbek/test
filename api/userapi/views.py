@@ -4,7 +4,6 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.db.models import Prefetch
-
 from api.test.serializers import AttemptDetailsSerializer
 from api.userapi.filters import get_attempt_details
 from api.userapi.serializers import RegisterSerializer, UserSerializer, CustomTokenObtainPairSerializer
@@ -31,8 +30,6 @@ class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
 
-
-
 class UserProfileView(APIView):
     def get(self, request, exam_id):
         user_exam = get_object_or_404(
@@ -49,12 +46,6 @@ class UserProfileView(APIView):
             "exam": user_exam.exam.category.name,
             "attempts": attempts_data
         }, status=status.HTTP_200_OK)
-
-
-
-
-
-
 
 # class UserProfileView(APIView):
 #     def get(self, request, exam_id):
