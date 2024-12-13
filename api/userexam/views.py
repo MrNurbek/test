@@ -1,5 +1,4 @@
 from datetime import timedelta
-
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -79,6 +78,17 @@ class StartExamView(APIView):
             'attempt_id': exam_attempt.id,
             'tests': response_data
         })
+
+
+
+
+
+
+
+
+
+
+
 
 
 class CompleteExamView(APIView):
