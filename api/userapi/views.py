@@ -47,6 +47,22 @@ class UserProfileView(APIView):
             "attempts": attempts_data
         }, status=status.HTTP_200_OK)
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # class UserProfileView(APIView):
 #     def get(self, request, exam_id):
 #         user_exam = get_object_or_404(
