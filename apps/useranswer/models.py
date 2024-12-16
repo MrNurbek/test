@@ -1,10 +1,8 @@
-
-
 from django.db import models
 from apps.examattempt.models import ExamAttempt
 from apps.testbase.models import Test, Answer
 
-#
+
 # class UserAnswer(models.Model):
 #     exam_attempt = models.ForeignKey(ExamAttempt, on_delete=models.CASCADE, related_name='answers',null=True)
 #     test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name='user_answers')
