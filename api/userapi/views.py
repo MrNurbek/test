@@ -10,16 +10,60 @@ from api.userapi.serializers import RegisterSerializer, UserSerializer, CustomTo
 from apps.testbase.models import Test
 from apps.userexam.models import UserExam
 from django.shortcuts import get_object_or_404
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 
 class RegisterView(APIView):
+    @swagger_auto_schema(
+        operation_description="Foydalanuvchini ro'yxatdan o'tkazish va JWT token olish.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['username', 'email', 'password', 'password_confirm'],
+            properties={
+                'username': openapi.Schema(type=openapi.TYPE_STRING, description='Foydalanuvchi nomi'),
+                'email': openapi.Schema(type=openapi.TYPE_STRING, format='email',
+                                        description='Foydalanuvchi elektron pochtasi'),
+                'password': openapi.Schema(type=openapi.TYPE_STRING, description='Foydalanuvchi paroli'),
+                'password_confirm': openapi.Schema(type=openapi.TYPE_STRING, description='Parolni tasdiqlash')
+            },
+        ),
+        responses={
+            201: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'user': openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Foydalanuvchi ID'),
+                            'username': openapi.Schema(type=openapi.TYPE_STRING, description='Foydalanuvchi nomi'),
+                            'email': openapi.Schema(type=openapi.TYPE_STRING,
+                                                    description='Foydalanuvchi elektron pochtasi')
+                        }
+                    ),
+                    'access': openapi.Schema(type=openapi.TYPE_STRING, description='JWT access token'),
+                    'refresh': openapi.Schema(type=openapi.TYPE_STRING, description='JWT refresh token'),
+                }
+            ),
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'error': openapi.Schema(type=openapi.TYPE_STRING, description='Xatolik haqida ma\'lumot')
+                }
+            )
+        },
+    )
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
             refresh = RefreshToken.for_user(user)
             return Response({
-                'user': UserSerializer(user).data,
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                },
                 'access': str(refresh.access_token),
                 'refresh': str(refresh),
             }, status=status.HTTP_201_CREATED)
@@ -29,8 +73,115 @@ class RegisterView(APIView):
 class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
+    @swagger_auto_schema(
+        operation_description="Foydalanuvchi login qiladi va JWT token oladi.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['email', 'password'],
+            properties={
+                'email': openapi.Schema(type=openapi.TYPE_STRING, description='Foydalanuvchi elektron pochtasi'),
+                'password': openapi.Schema(type=openapi.TYPE_STRING, description='Foydalanuvchi paroli'),
+            },
+        ),
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'access': openapi.Schema(type=openapi.TYPE_STRING, description='JWT access token'),
+                    'refresh': openapi.Schema(type=openapi.TYPE_STRING, description='JWT refresh token'),
+                    'role': openapi.Schema(type=openapi.TYPE_STRING, description='Foydalanuvchi roli'),
+                },
+            ),
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'detail': openapi.Schema(type=openapi.TYPE_STRING, description='Xato ma\'lumotlar'),
+                },
+            ),
+        },
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
 
 class UserProfileView(APIView):
+    @swagger_auto_schema(
+        operation_summary="Foydalanuvchi imtihon natijalari",
+        operation_description="Foydalanuvchi tanlangan imtihon bo'yicha barcha urinishlari va javoblari haqida ma'lumot oladi.",
+        manual_parameters=[
+            openapi.Parameter(
+                name='exam_id',
+                in_=openapi.IN_PATH,
+                required=True,
+                type=openapi.TYPE_INTEGER,
+                description='Imtihon identifikatori'
+            )
+        ],
+        responses={
+            200: openapi.Response(
+                description='Foydalanuvchi imtihon natijalari.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'exam': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Imtihon kategoriyasi nomi'
+                        ),
+                        'attempts': openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Items(
+                                type=openapi.TYPE_OBJECT,
+                                properties={
+                                    'attempt_number': openapi.Schema(
+                                        type=openapi.TYPE_INTEGER,
+                                        description='Urinish raqami'
+                                    ),
+                                    'score': openapi.Schema(
+                                        type=openapi.TYPE_INTEGER,
+                                        description='To‘plangan ball'
+                                    ),
+                                    'status': openapi.Schema(
+                                        type=openapi.TYPE_STRING,
+                                        description='Urinish holati'
+                                    ),
+                                    'answers': openapi.Schema(
+                                        type=openapi.TYPE_ARRAY,
+                                        items=openapi.Items(
+                                            type=openapi.TYPE_OBJECT,
+                                            properties={
+                                                'question': openapi.Schema(
+                                                    type=openapi.TYPE_STRING,
+                                                    description='Savol matni'
+                                                ),
+                                                'selected_answer': openapi.Schema(
+                                                    type=openapi.TYPE_STRING,
+                                                    description='Tanlangan javob'
+                                                ),
+                                                'correct_answer': openapi.Schema(
+                                                    type=openapi.TYPE_STRING,
+                                                    description='To‘g‘ri javob'
+                                                ),
+                                                'is_correct': openapi.Schema(
+                                                    type=openapi.TYPE_BOOLEAN,
+                                                    description='Javob to‘g‘riligini ko‘rsatadi'
+                                                )
+                                            }
+                                        ),
+                                        description='Javoblar roʻyxati'
+                                    )
+                                }
+                            )
+                        )
+                    }
+                )
+            ),
+            404: openapi.Response(
+                description='Foydalanuvchi uchun imtihon topilmadi.',
+                examples={"application/json": {"error": "Exam not found."}}
+            )
+        },
+        security=[{'Bearer': []}]
+    )
     def get(self, request, exam_id):
         user_exam = get_object_or_404(
             UserExam.objects.prefetch_related(
@@ -46,22 +197,6 @@ class UserProfileView(APIView):
             "exam": user_exam.exam.category.name,
             "attempts": attempts_data
         }, status=status.HTTP_200_OK)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # class UserProfileView(APIView):
 #     def get(self, request, exam_id):

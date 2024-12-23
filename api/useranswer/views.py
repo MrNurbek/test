@@ -4,7 +4,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
-
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 from api.useranswer.serializers import SubmitAnswerSerializer
 from apps.examattempt.models import ExamAttempt
 from apps.testbase.models import Test, Answer
@@ -13,14 +14,51 @@ from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
 
 
-
-
-
-
-
 class SubmitAnswerView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_summary="Javob yuborish",
+        operation_description="Foydalanuvchi testga javob yuboradi va natijasi saqlanadi.",
+        manual_parameters=[
+            openapi.Parameter(
+                name='attempt_id',
+                in_=openapi.IN_PATH,
+                required=True,
+                type=openapi.TYPE_INTEGER,
+                description='Imtihon urinish identifikatori'
+            )
+        ],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['test_id', 'selected_answer_id'],
+            properties={
+                'test_id': openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description='Test identifikatori'
+                ),
+                'selected_answer_id': openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description='Tanlangan javob identifikatori'
+                ),
+            }
+        ),
+        responses={
+            200: openapi.Response(
+                description='Javob muvaffaqiyatli yuborildi.',
+                examples={"application/json": {"message": "Answer submitted successfully."}}
+            ),
+            400: openapi.Response(
+                description='Soʻrov notoʻgʻri yoki imtihon allaqachon yakunlangan.',
+                examples={"application/json": {"error": "Exam time has expired."}}
+            ),
+            404: openapi.Response(
+                description='Imtihon urinish yoki test topilmadi.',
+                examples={"application/json": {"error": "Exam attempt not found."}}
+            )
+        },
+        security=[{'Bearer': []}]
+    )
     def post(self, request, attempt_id):
         exam_attempt = get_object_or_404(ExamAttempt, id=attempt_id, user_exam__user=request.user)
 
@@ -36,7 +74,6 @@ class SubmitAnswerView(APIView):
         serializer.save()
 
         return Response({"message": "Answer submitted successfully."}, status=status.HTTP_200_OK)
-
 
 
 
@@ -84,17 +121,6 @@ class SubmitAnswerView(APIView):
 #             "message": "Answer submitted successfully.",
 #             "updated": not created
 #         }, status=status.HTTP_200_OK)
-
-
-
-
-
-
-
-
-
-
-
 
 
 #

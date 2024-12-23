@@ -6,10 +6,8 @@ from django.shortcuts import get_object_or_404
 from api.testupload.permission import NewTestUploadPermission
 from apps.category.models import Category
 from apps.testbase.models import Topic, Test, Answer
-
-
-
-
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 class TestFileParser:
     @staticmethod
@@ -49,16 +47,61 @@ class TestFileParser:
         return answers, i
 
 
-
-
-
-
-
-
 class NewTestUploadView(APIView):
-
     permission_classes = [NewTestUploadPermission]
 
+    @swagger_auto_schema(
+        operation_description="Yangi testlarni yuklash va saqlash.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['category_id', 'topic_name', 'file'],
+            properties={
+                'category_id': openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description='Kategoriya identifikatori'
+                ),
+                'topic_name': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description='Mavzu nomi'
+                ),
+                'file': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    format='binary',
+                    description='Testlar saqlangan fayl (masalan, CSV yoki TXT format)'
+                ),
+            }
+        ),
+        responses={
+            201: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'message': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='Testlar muvaffaqiyatli yuklandi.'
+                    )
+                }
+            ),
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'error': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='Xatolik yuz berdi.'
+                    )
+                }
+            ),
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'detail': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='Sizda ushbu amalni bajarish uchun ruxsat mavjud emas.'
+                    )
+                }
+            )
+        },
+        security=[{'Bearer': []}]
+    )
     def post(self, request):
         category_id = request.data.get('category_id')
         topic_name = request.data.get('topic_name')
@@ -71,7 +114,15 @@ class NewTestUploadView(APIView):
             )
 
         category = get_object_or_404(Category, id=category_id)
-        topic, _ = Topic.objects.get_or_create(name=topic_name)
+
+        topic, created = Topic.objects.get_or_create(
+            name=topic_name,
+            defaults={'category': category}
+        )
+
+        if not created and topic.category != category:
+            topic.category = category
+            topic.save()
 
         try:
             content = file.read().decode('utf-8')
@@ -83,19 +134,50 @@ class NewTestUploadView(APIView):
         return Response({"message": "Tests successfully uploaded."}, status=status.HTTP_201_CREATED)
 
     def _save_tests_and_answers(self, tests, category, topic):
-
         for test_data in tests:
             test = Test.objects.create(category=category, topic=topic, question=test_data['question'])
             Answer.objects.bulk_create([
                 Answer(test=test, text=answer['text'], is_correct=answer['is_correct'])
                 for answer in test_data['answers']
             ])
-
-
-
-
-
-
+# class NewTestUploadView(APIView):
+#
+#     permission_classes = [NewTestUploadPermission]
+#
+#     def post(self, request):
+#         category_id = request.data.get('category_id')
+#         topic_name = request.data.get('topic_name')
+#         file = request.FILES.get('file')
+#
+#         if not all([file, category_id, topic_name]):
+#             return Response(
+#                 {"error": "Category ID, topic name, and file are required."},
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+#
+#         category = get_object_or_404(Category, id=category_id)
+#         topic, _ = Topic.objects.get_or_create(name=topic_name)
+#
+#         try:
+#             content = file.read().decode('utf-8')
+#             tests = TestFileParser.parse(content)
+#         except Exception as e:
+#             return Response({"error": f"Failed to process the file: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+#
+#         self._save_tests_and_answers(tests, category, topic)
+#         return Response({"message": "Tests successfully uploaded."}, status=status.HTTP_201_CREATED)
+#
+#     def _save_tests_and_answers(self, tests, category, topic):
+#
+#         for test_data in tests:
+#             test = Test.objects.create(category=category, topic=topic, question=test_data['question'])
+#             Answer.objects.bulk_create([
+#                 Answer(test=test, text=answer['text'], is_correct=answer['is_correct'])
+#                 for answer in test_data['answers']
+#             ])
+#
+#
+#
 
 
 #
@@ -166,8 +248,6 @@ class NewTestUploadView(APIView):
 #                 Answer(test=test, text=answer['text'], is_correct=answer['is_correct'])
 #                 for answer in test_data['answers']
 #             ])
-
-
 
 
 # class NewTestUploadView(APIView):

@@ -14,12 +14,55 @@ from apps.userexam.models import UserExam
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 import random
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 
 class StartExamView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_summary="Imtihonni boshlash",
+        operation_description="Foydalanuvchi imtihonni boshlaydi va testlar ro'yxatini oladi.",
+        manual_parameters=[
+            openapi.Parameter(
+                name='exam_id',
+                in_=openapi.IN_PATH,
+                required=True,
+                type=openapi.TYPE_INTEGER,
+                description='Imtihon identifikatori'
+            )
+        ],
+        responses={
+            200: openapi.Response(
+                description='Imtihon muvaffaqiyatli boshlandi.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Imtihon urinish identifikatori'),
+                        'attempt_number': openapi.Schema(type=openapi.TYPE_INTEGER, description='Urinish raqami'),
+                        'status': openapi.Schema(type=openapi.TYPE_STRING, description='Urinish holati'),
+                        'tests': openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Items(type=openapi.TYPE_OBJECT),
+                            description='Testlar roʻyxati'
+                        ),
+                    }
+                )
+            ),
+            403: openapi.Response(
+                description='Maksimal urinishlar soni oshib ketgan.',
+                examples={"application/json": {"error": "Maximum attempts reached for this exam."}}
+            ),
+            404: openapi.Response(
+                description='Imtihon topilmadi.',
+                examples={"application/json": {"error": "Exam not found."}}
+            )
+        },
+        security=[{'Bearer': []}]
+    )
     def post(self, request, exam_id):
+
         exam = get_object_or_404(Exam, id=exam_id)
         user = request.user
         user_exam, _ = UserExam.objects.get_or_create(
@@ -28,10 +71,15 @@ class StartExamView(APIView):
             defaults={'attempt_count': 0, 'status': 'started'}
         )
         if user_exam.attempt_count >= 3:
-            return Response({"error": "Maximum attempts reached for this exam."}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"error": "Maximum attempts reached for this exam."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         exam_attempt = ExamAttempt.objects.filter(user_exam=user_exam, status='started').first()
         if not exam_attempt:
             exam_attempt = self._create_new_attempt(user_exam, exam)
+
         serializer = StartExamSerializer(exam_attempt, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -50,16 +98,53 @@ class StartExamView(APIView):
         return exam_attempt
 
 
-
-
-
-
-
-
-
 class CompleteExamView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_summary="Imtihonni yakunlash",
+        operation_description="Foydalanuvchi imtihonni yakunlaydi va natijalar hisoblanadi.",
+        manual_parameters=[
+            openapi.Parameter(
+                name='attempt_id',
+                in_=openapi.IN_PATH,
+                required=True,
+                type=openapi.TYPE_INTEGER,
+                description='Imtihon urinish identifikatori'
+            )
+        ],
+        responses={
+            200: openapi.Response(
+                description='Imtihon muvaffaqiyatli yakunlandi.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Imtihon urinish identifikatori'),
+                        'attempt_number': openapi.Schema(type=openapi.TYPE_INTEGER, description='Urinish raqami'),
+                        'score': openapi.Schema(type=openapi.TYPE_INTEGER, description='To‘plangan ball'),
+                        'status': openapi.Schema(type=openapi.TYPE_STRING, description='Yakuniy holat'),
+                        'completed_at': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            format='date-time',
+                            description='Imtihon yakunlangan vaqt'
+                        ),
+                        'total_questions': openapi.Schema(type=openapi.TYPE_INTEGER, description='Jami savollar soni'),
+                        'correct_answers': openapi.Schema(type=openapi.TYPE_INTEGER, description='To‘g‘ri javoblar soni'),
+                        'wrong_answers': openapi.Schema(type=openapi.TYPE_INTEGER, description='Noto‘g‘ri javoblar soni'),
+                    }
+                )
+            ),
+            400: openapi.Response(
+                description='Imtihon allaqachon yakunlangan.',
+                examples={"application/json": {"error": "This exam attempt is already completed."}}
+            ),
+            404: openapi.Response(
+                description='Imtihon urinish topilmadi.',
+                examples={"application/json": {"error": "Exam attempt not found."}}
+            )
+        },
+        security=[{'Bearer': []}]
+    )
     def post(self, request, attempt_id):
         exam_attempt = get_object_or_404(
             ExamAttempt.objects.prefetch_related(
@@ -85,9 +170,6 @@ class CompleteExamView(APIView):
             ExamResultSerializer(exam_attempt).data,
             status=status.HTTP_200_OK
         )
-
-
-
 
 # class StartExamView(APIView):
 #     permission_classes = [IsAuthenticated]
