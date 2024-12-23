@@ -8,7 +8,8 @@ from api.exam.views import CreateExamView
 from api.testupload.views import NewTestUploadView
 from api.useranswer.views import SubmitAnswerView
 from api.userexam.views import StartExamView, CompleteExamView
-
+from core import settings
+from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('register/', RegisterView.as_view(), name='register'),
@@ -19,4 +20,6 @@ urlpatterns = [
     path('submit-answer/<int:attempt_id>/', SubmitAnswerView.as_view(), name='submit-answer'),
     path('complete-exam/<int:attempt_id>/', CompleteExamView.as_view(), name='complete-exam'),
     path('profile/<int:exam_id>/', UserProfileView.as_view(), name='user-profile'),
-]
+]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL,
+                                                                                           document_root=settings.MEDIA_ROOT)
+
