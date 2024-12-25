@@ -9,7 +9,12 @@ SECRET_KEY = 'django-insecure-9)n@cww3kqa1o+4w99d46mbc@1rbcfj8$n^^c183aob^4rw3t^
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    "dtm.dtpi-dictionary.uz"
+]
+
 
 
 INSTALLED_APPS = [
@@ -183,12 +188,12 @@ SIMPLE_JWT = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:8000",
-    "https://dtm.dtpi-dictionary.uz",
+    "http://localhost:5173",
+    "https://dtm.dtpi-dictionary.uz"
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://127.0.0.1:8000",
+    "http://localhost:5173",
     "https://dtm.dtpi-dictionary.uz"
 ]
 
