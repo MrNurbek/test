@@ -49,3 +49,17 @@ class StartExamSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExamAttempt
         fields = ['id', 'status', 'tests']
+
+
+
+class UserExamSerializerGet(serializers.ModelSerializer):
+    exam_category = serializers.CharField(source='exam.category.name', read_only=True)
+    exam_start_time = serializers.DateTimeField(source='exam.start_time', read_only=True)
+    exam_end_time = serializers.DateTimeField(source='exam.end_time', read_only=True)
+
+    class Meta:
+        model = UserExam
+        fields = [
+            'id', 'exam_category', 'exam_start_time', 'exam_end_time',
+            'status', 'score', 'attempt_count', 'started_at'
+        ]

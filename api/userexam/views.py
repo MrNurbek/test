@@ -5,13 +5,13 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Prefetch
 from api.examattempt.serializers import ExamResultSerializer
-from api.userexam.serializers import StartExamSerializer
+from api.userexam.serializers import StartExamSerializer, UserExamSerializerGet
 from apps.exam.models import Exam
 from apps.examattempt.models import ExamAttempt
 from apps.testbase.models import Test
 from apps.useranswer.models import UserAnswer
 from apps.userexam.models import UserExam
-from django.utils import timezone
+from rest_framework import generics
 from django.shortcuts import get_object_or_404
 import random
 from drf_yasg.utils import swagger_auto_schema
@@ -170,6 +170,99 @@ class CompleteExamView(APIView):
             ExamResultSerializer(exam_attempt).data,
             status=status.HTTP_200_OK
         )
+
+
+class UserExamListView(generics.ListAPIView):
+    serializer_class = UserExamSerializerGet
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_description="Foydalanuvchining qatnashgan barcha imtihonlari ro'yxatini qaytaradi.",
+        manual_parameters=[
+            openapi.Parameter(
+                name='Authorization',
+                in_=openapi.IN_HEADER,
+                type=openapi.TYPE_STRING,
+                description='Bearer token orqali autentifikatsiya qilish (majburiy)',
+                required=True
+            )
+        ],
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='UserExam ID'),
+                        'exam_category': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Imtihon kategoriyasi'
+                        ),
+                        'exam_start_time': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            format=openapi.FORMAT_DATETIME,
+                            description='Imtihon boshlanish vaqti'
+                        ),
+                        'exam_end_time': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            format=openapi.FORMAT_DATETIME,
+                            description='Imtihon tugash vaqti'
+                        ),
+                        'status': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Imtihon holati (started/completed)'
+                        ),
+                        'score': openapi.Schema(
+                            type=openapi.TYPE_INTEGER,
+                            description='Foydalanuvchining natijasi'
+                        ),
+                        'attempt_count': openapi.Schema(
+                            type=openapi.TYPE_INTEGER,
+                            description='Urinishlar soni'
+                        ),
+                        'started_at': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            format=openapi.FORMAT_DATETIME,
+                            description='Imtihon boshlanish sanasi va vaqti'
+                        )
+                    }
+                )
+            ),
+            401: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'detail': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='Autentifikatsiya ma\'lumotlari yetishmayapti yoki noto‘g‘ri.'
+                    )
+                }
+            )
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return UserExam.objects.filter(user=self.request.user)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # class StartExamView(APIView):
 #     permission_classes = [IsAuthenticated]

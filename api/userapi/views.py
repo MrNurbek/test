@@ -74,28 +74,50 @@ class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
     @swagger_auto_schema(
-        operation_description="Foydalanuvchi login qiladi va JWT token oladi.",
+        operation_description="Foydalanuvchi login qiladi va JWT token oladi. Username yoki Email ishlatish mumkin.",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['email', 'password'],
+            required=['password'],
             properties={
-                'email': openapi.Schema(type=openapi.TYPE_STRING, description='Foydalanuvchi elektron pochtasi'),
-                'password': openapi.Schema(type=openapi.TYPE_STRING, description='Foydalanuvchi paroli'),
+                'username': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description='Foydalanuvchi nomi (majburiy emas)'
+                ),
+                'email': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description='Foydalanuvchi elektron pochtasi (majburiy emas)'
+                ),
+                'password': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description='Foydalanuvchi paroli'
+                ),
             },
         ),
         responses={
             200: openapi.Schema(
                 type=openapi.TYPE_OBJECT,
                 properties={
-                    'access': openapi.Schema(type=openapi.TYPE_STRING, description='JWT access token'),
-                    'refresh': openapi.Schema(type=openapi.TYPE_STRING, description='JWT refresh token'),
-                    'role': openapi.Schema(type=openapi.TYPE_STRING, description='Foydalanuvchi roli'),
+                    'access': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='JWT access token'
+                    ),
+                    'refresh': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='JWT refresh token'
+                    ),
+                    'role': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='Foydalanuvchi roli'
+                    ),
                 },
             ),
             400: openapi.Schema(
                 type=openapi.TYPE_OBJECT,
                 properties={
-                    'detail': openapi.Schema(type=openapi.TYPE_STRING, description='Xato ma\'lumotlar'),
+                    'detail': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='Xato ma\'lumotlar'
+                    ),
                 },
             ),
         },
