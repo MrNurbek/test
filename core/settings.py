@@ -4,10 +4,7 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-9)n@cww3kqa1o+4w99d46mbc@1rbcfj8$n^^c183aob^4rw3t^'
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -18,6 +15,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -106,6 +104,27 @@ SWAGGER_SETTINGS = {
             'in': 'header'
         }
     }
+}
+JAZZMIN_SETTINGS = {
+    "site_title": "Mening Admin Panelim",
+    "site_header": "Mening Loyiham",
+    "site_brand": "Admin Panel",
+    "welcome_sign": "Mening Loyihamga xush kelibsiz!",
+    "copyright": "Mening Loyiham © 2024",
+    "search_model": ["auth.User"],
+    "user_avatar": None,
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "hide_apps": [],
+    "hide_models": [],
+    "order_with_respect_to": ["auth", "myapp"],
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.User": "fas fa-user",
+        "auth.Group": "fas fa-users",
+    },
+    "default_icon_parents": "fas fa-chevron-circle-right",
+    "default_icon_children": "fas fa-circle",
 }
 
 # Password validation
