@@ -1,5 +1,8 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
+
+from api.exam.filter import ExamFilter
 from api.exam.serializers import ExamSerializer
 from apps.exam.models import Exam
 from drf_yasg.utils import swagger_auto_schema
@@ -91,6 +94,8 @@ class ExamListView(generics.ListAPIView):
     queryset = Exam.objects.all()
     serializer_class = ExamSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ExamFilter
 
     @swagger_auto_schema(
         operation_description="Faol imtihonlar ro'yxati (tugash vaqti kelmagan).",

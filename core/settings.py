@@ -4,7 +4,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 SECRET_KEY = 'django-insecure-9)n@cww3kqa1o+4w99d46mbc@1rbcfj8$n^^c183aob^4rw3t^'
 
 DEBUG = True
@@ -14,8 +13,6 @@ ALLOWED_HOSTS = [
     "localhost",
     "dtm.dtpi-dictionary.uz"
 ]
-
-
 
 INSTALLED_APPS = [
     # 'jazzmin',
@@ -27,6 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "corsheaders",
     'rest_framework',
+    'django_filters',
     'drf_yasg',
     'rest_framework_simplejwt',
     'apps.userapp',
@@ -97,6 +95,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
 }
 SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False,
@@ -196,7 +195,6 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "https://dtm.dtpi-dictionary.uz"
 ]
-
 
 CORS_ALLOW_METHODS = [
     "GET",
