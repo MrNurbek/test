@@ -60,6 +60,6 @@ class UserExamSerializerGet(serializers.ModelSerializer):
     class Meta:
         model = UserExam
         fields = [
-            'id', 'exam_category', 'exam_start_time', 'exam_end_time',
+            'id', 'exam_id','exam_category', 'exam_start_time', 'exam_end_time',
             'status', 'score', 'attempt_count', 'started_at'
         ]
