@@ -1,4 +1,6 @@
 from datetime import timedelta
+
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -16,6 +18,7 @@ from django.shortcuts import get_object_or_404
 import random
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from collections import defaultdict
 
 
 class StartExamView(APIView):
@@ -87,15 +90,68 @@ class StartExamView(APIView):
         user_exam.attempt_count += 1
         user_exam.status = 'started'
         user_exam.save()
-        relevant_tests = list(Test.objects.filter(topic__in=exam.topics.all()))
-        selected_tests = random.sample(relevant_tests, min(len(relevant_tests), exam.total_questions))
+
+        # Barcha testlarni mavzularga ajratish
+        relevant_tests = Test.objects.filter(topic__in=exam.topics.all())
+        topic_tests = defaultdict(list)
+        for test in relevant_tests:
+            topic_tests[test.topic.id].append(test)
+
+        selected_tests = []
+        remaining_questions = exam.total_questions
+
+        # 1. Mavzular bo'yicha teng taqsimlash
+        topic_count = len(topic_tests)
+        if topic_count == 0:
+            raise ValidationError("No tests available for this exam.")
+
+        base_questions_per_topic = remaining_questions // topic_count
+        extra_questions = remaining_questions % topic_count
+
+        for topic_id, tests in topic_tests.items():
+            # Har bir mavzudan bazaviy savollar sonini tanlash
+            selected_tests.extend(
+                random.sample(tests, min(len(tests), base_questions_per_topic))
+            )
+
+        # 2. Qo'shimcha savollarni tasodifiy mavzulardan tanlash
+        remaining_topics = [t for t in topic_tests.keys() if len(topic_tests[t]) > base_questions_per_topic]
+        for _ in range(extra_questions):
+            if not remaining_topics:
+                break
+            topic_id = random.choice(remaining_topics)
+            topic_tests[topic_id] = [t for t in topic_tests[topic_id] if t not in selected_tests]
+            if topic_tests[topic_id]:
+                selected_tests.append(random.choice(topic_tests[topic_id]))
+            if not topic_tests[topic_id]:
+                remaining_topics.remove(topic_id)
+
+        # 3. Testlarni aralashtirish
+        random.shuffle(selected_tests)
+
+        # 4. Yangi imtihon urinishini yaratish
         exam_attempt = ExamAttempt.objects.create(
             user_exam=user_exam,
             attempt_number=user_exam.attempt_count,
             status='started'
         )
-        exam_attempt.tests.set(selected_tests)
+        exam_attempt.tests.set(selected_tests[:exam.total_questions])  # Ortiqcha testlarni kesib tashlash
+
         return exam_attempt
+
+    # def _create_new_attempt(self, user_exam, exam):
+    #     user_exam.attempt_count += 1
+    #     user_exam.status = 'started'
+    #     user_exam.save()
+    #     relevant_tests = list(Test.objects.filter(topic__in=exam.topics.all()))
+    #     selected_tests = random.sample(relevant_tests, min(len(relevant_tests), exam.total_questions))
+    #     exam_attempt = ExamAttempt.objects.create(
+    #         user_exam=user_exam,
+    #         attempt_number=user_exam.attempt_count,
+    #         status='started'
+    #     )
+    #     exam_attempt.tests.set(selected_tests)
+    #     return exam_attempt
 
 
 class CompleteExamView(APIView):
@@ -129,8 +185,10 @@ class CompleteExamView(APIView):
                             description='Imtihon yakunlangan vaqt'
                         ),
                         'total_questions': openapi.Schema(type=openapi.TYPE_INTEGER, description='Jami savollar soni'),
-                        'correct_answers': openapi.Schema(type=openapi.TYPE_INTEGER, description='To‘g‘ri javoblar soni'),
-                        'wrong_answers': openapi.Schema(type=openapi.TYPE_INTEGER, description='Noto‘g‘ri javoblar soni'),
+                        'correct_answers': openapi.Schema(type=openapi.TYPE_INTEGER,
+                                                          description='To‘g‘ri javoblar soni'),
+                        'wrong_answers': openapi.Schema(type=openapi.TYPE_INTEGER,
+                                                        description='Noto‘g‘ri javoblar soni'),
                     }
                 )
             ),
@@ -244,25 +302,6 @@ class UserExamListView(generics.ListAPIView):
 
     def get_queryset(self):
         return UserExam.objects.filter(user=self.request.user)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # class StartExamView(APIView):
 #     permission_classes = [IsAuthenticated]
