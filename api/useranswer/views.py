@@ -64,7 +64,28 @@ class SubmitAnswerView(APIView):
 
         if exam_attempt.status == 'completed':
             return Response({"error": "Exam is already completed."}, status=status.HTTP_400_BAD_REQUEST)
-        if now() > exam_attempt.started_at + timedelta(minutes=exam_attempt.user_exam.exam.time_limit):
+
+        time_limit = exam_attempt.user_exam.exam.time_limit
+
+        # ✅ To'g'ri time_limit ishlov berish
+        if isinstance(time_limit, timedelta):
+            expiration_time = exam_attempt.started_at + time_limit
+        elif isinstance(time_limit, (int, float)):
+            expiration_time = exam_attempt.started_at + timedelta(minutes=time_limit)
+        elif isinstance(time_limit, str):
+            try:
+                h, m, s = map(int, time_limit.split(':'))
+                expiration_time = exam_attempt.started_at + timedelta(hours=h, minutes=m, seconds=s)
+            except ValueError:
+                raise ValueError(f"Invalid string format for time_limit: {time_limit}")
+        else:
+            raise TypeError(f"Unsupported time_limit type: {type(time_limit)}")
+
+        print("Started at:", exam_attempt.started_at)
+        print("Time limit:", time_limit)
+        print("Expiration time:", expiration_time)
+
+        if now() > expiration_time:
             exam_attempt.status = 'completed'
             exam_attempt.save()
             return Response({"error": "Exam time has expired."}, status=status.HTTP_400_BAD_REQUEST)
