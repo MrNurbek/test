@@ -16,9 +16,11 @@ class Exam(models.Model):
     end_time = models.DateTimeField(null=True, blank=True)
     total_questions = models.IntegerField()
     time_limit = models.DurationField(
+        help_text="Time limit for the exam in HH:MM:SS format",
         null=True,
         blank=True,
-        default=timedelta(minutes=30) )
+        default=timedelta(minutes=30)
+    )
 
     def __str__(self):
         return f"Exam: {self.category.name} ({self.start_time} - {self.end_time} - id={self.id})"
