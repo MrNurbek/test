@@ -42,17 +42,22 @@ def auto_complete_exams():
     for exam_attempt in expired_attempts:
         time_limit = exam_attempt.user_exam.exam.time_limit
 
+        # To'g'ridan-to'g'ri timedelta qiymatidan foydalanish
         if isinstance(time_limit, timedelta):
             expiration_time = exam_attempt.started_at + time_limit
         elif isinstance(time_limit, (int, float)):
             expiration_time = exam_attempt.started_at + timedelta(minutes=time_limit)
         elif isinstance(time_limit, str):
-            h, m, s = map(int, time_limit.split(':'))
-            expiration_time = exam_attempt.started_at + timedelta(hours=h, minutes=m, seconds=s)
+            try:
+                h, m, s = map(int, time_limit.split(':'))
+                expiration_time = exam_attempt.started_at + timedelta(hours=h, minutes=m, seconds=s)
+            except ValueError:
+                raise ValueError(f"Invalid string format for time_limit: {time_limit}")
         else:
             raise TypeError(f"Unsupported time_limit type: {type(time_limit)}")
 
         print("Started at:", exam_attempt.started_at)
+        print("Time limit:", time_limit)
         print("Expiration time:", expiration_time)
 
         if now() > expiration_time:
