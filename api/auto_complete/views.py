@@ -42,12 +42,13 @@ def auto_complete_exams():
     for exam_attempt in expired_attempts:
         time_limit = exam_attempt.user_exam.exam.time_limit
 
-        # Agar time_limit timedelta bo'lsa, qo'shimcha konvertatsiya qilinmaydi
+        # Agar time_limit allaqachon timedelta bo'lsa
         if isinstance(time_limit, timedelta):
             expiration_time = exam_attempt.started_at + time_limit
-        else:
-            # Agar vaqt boshqa formatda bo'lsa, timedelta yordamida aylantiramiz
+        elif isinstance(time_limit, (int, float)):
             expiration_time = exam_attempt.started_at + timedelta(minutes=time_limit)
+        else:
+            raise TypeError(f"Unsupported time_limit type: {type(time_limit)}")
 
         if now() > expiration_time:
             with transaction.atomic():
