@@ -12,6 +12,7 @@ class ExamSerializer(serializers.ModelSerializer):
     category = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all()
     )
+    category_name = serializers.SerializerMethodField()
     topics = serializers.PrimaryKeyRelatedField(
         queryset=Topic.objects.all(), many=True
     )
@@ -24,14 +25,19 @@ class ExamSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Exam
-        fields = ['id', 'category', 'topics', 'start_time', 'end_time', 'total_questions', 'time_limit']
+        fields = [
+            'id', 'category', 'category_name', 'topics',
+            'start_time', 'end_time', 'total_questions', 'time_limit'
+        ]
+
+    def get_category_name(self, obj):
+        return obj.category.name if obj.category else None
 
     def create(self, validated_data):
         topics = validated_data.pop('topics', [])
         exam = Exam.objects.create(**validated_data)
         exam.topics.set(topics)
         return exam
-
 
 
 
