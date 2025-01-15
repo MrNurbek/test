@@ -188,7 +188,8 @@ SIMPLE_JWT = {
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://dtm.dtpi-dictionary.uz"
+    "https://dtm.dtpi-dictionary.uz",
+    "https://comfy-pie-d6e8e1.netlify.app",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -211,3 +212,4 @@ CORS_ALLOW_HEADERS = [
     "X-CSRFToken"
 ]
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = True
